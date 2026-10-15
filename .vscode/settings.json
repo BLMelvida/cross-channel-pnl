@@ -1,0 +1,11 @@
+{
+    // "dbt.projectDir": "./dbt",
+    // "dbtPythonPath": "${workspaceFolder}/.pixi/envs/cross_channel_env/bin/python",
+    "black-formatter.path": [
+        "${workspaceFolder}/.pixi/envs/default/bin/black"
+    ],
+    "sqlfluff.executablePath": "${workspaceFolder}/.pixi/envs/default/bin/sqlfluff",
+    "files.associations": {
+        ".sqlfluff": "ini"
+    },
+}
