@@ -58,23 +58,27 @@ def generate_catalog(cfg: Config, rng: random.Random) -> Catalog:
 
     products: list[Product] = []
     for idx in range(1, cfg.n_products + 1):
-        brand = rng.choice(brands)
-        category = rng.choice(categories)
+        # Per entity/product randomization (rng)
+        rand_entity = random.Random(f"{cfg.seed}:product:{idx}")
+        brand = rand_entity.choice(brands)
+        category = rand_entity.choice(categories)
 
         preset = CATEGORIES_LIST[category.name]
-        mod = rng.choice(preset["modifiers"])
-        item = rng.choice(preset["items"])
+        mod = rand_entity.choice(preset["modifiers"])
+        item = rand_entity.choice(preset["items"])
 
         # Integer cents to stay exact: (300 - 8000)/100 -> 3.00 - 80.00 USD.
-        cost = Decimal(rng.randint(300, 8000)) / 100
+        cost = Decimal(rand_entity.randint(300, 8000)) / 100
 
         # Initial margin covers marketplace fees, ads, and refunds.
         # Retail price = 1.8x to 2.5x the supplier cost (80% - 150% markup).
-        markup_pct = Decimal(rng.randint(80, 150)) / 100
+        markup_pct = Decimal(rand_entity.randint(80, 150)) / 100
         price = (cost * (1 + markup_pct)).quantize(
             Decimal("0.01"), rounding=ROUND_HALF_UP
         )
-        assert price > cost, "product priced below cost"
+
+        if price <= cost:
+            raise ValueError(f"Product priced below cost")
 
         products.append(
             Product(
