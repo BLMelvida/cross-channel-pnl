@@ -1,3 +1,24 @@
+CHANNEL_PROFILES: dict[str, dict] = {
+    "amazon": {
+        "sku_template": "{brand}-{item}-{code}",
+        "sku_max_len": 40,
+        "marketplace_id_kind": "asin",
+        "title_style": "amazon",
+    },
+    "ebay": {
+        "sku_template": "EB-{category}-{brand}-{item}-NEW-B12",
+        "sku_max_len": 50,
+        "marketplace_id_kind": "ebay_item_id",
+        "title_style": "ebay",
+    },
+    "woocommerce": {
+        "sku_template": "{category}-{item}-{code}",
+        "sku_max_len": 50,
+        "marketplace_id_kind": "woo_product_id",
+        "title_style": "woocommerce",
+    },
+}
+
 BRAND_NAMES: list[str] = [
     "Aurora",
     "Nordvik",
