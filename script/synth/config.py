@@ -19,7 +19,7 @@ class Config(BaseModel):
         - Demand      : `per_day_orders_range` - (low, high) orders per day.
         - Channels    : `store_channels` - marketplaces being simulated.
         - Money       : `default_currency` (base currency for prices) and
-          `fx_rates` (value of 1 unit of each currency in USD; USD = 1.0).
+          `fx_rates` (value of 1 unit of each currency in USD).
         - Output      : `output_dir` - where generated artifacts are written.
 
     Note: Category list is placed in `reference.CATEGORIES_LIST`.
@@ -43,10 +43,25 @@ class Config(BaseModel):
     n_brands: int = 23
     per_day_orders_range: tuple[int, int] = (50, 250)
 
+    # price_usd = amount * fx_rates[currency]
     default_currency: str = "USD"
     fx_rates: dict[str, float] = Field(
-        default_factory=lambda: {"USD": 1.0, "EUR": 0.92, "GBP": 0.79}
+        default_factory=lambda: {"USD": 1.0, "EUR": 1.12, "GBP": 1.32}
     )
+
+    channel_currency: dict[str, str] = {
+        "amazon": "USD",
+        "ebay": "GBP",
+        "woocommerce": "USD",
+    }
+
+    channel_price: dict[str, float] = {
+        "amazon": 1.00,
+        "ebay": 1.12,
+        "woocommerce": 1.32,
+    }
+
+    sku_null_rate: float = 0.05
 
     output_dir: Path = Path("data")
 
