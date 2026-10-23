@@ -1,5 +1,5 @@
-from script.synth.config import Config
 from script.synth.catalog import generate_catalog
+from script.synth.config import Config
 from script.synth.seeding import stage_rng
 
 

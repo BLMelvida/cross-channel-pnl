@@ -4,6 +4,7 @@ sqlfluff==3.5.0
 sqlfluff-templater-dbt==3.5.0
 faker==40.43.0
 black==26.10.1
+ruff==0.17.2 
 pytest==8.4.2
 google-cloud-bigquery==3.43.0
 fastapi==0.141.1

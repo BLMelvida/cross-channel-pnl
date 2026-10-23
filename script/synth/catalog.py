@@ -1,7 +1,9 @@
 import random
 from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
+
 from pydantic import BaseModel
+
 from .config import Config
 from .reference import BRAND_NAMES, CATEGORIES_LIST
 
@@ -78,7 +80,7 @@ def generate_catalog(cfg: Config, rng: random.Random) -> Catalog:
         )
 
         if price <= cost:
-            raise ValueError(f"Product priced below cost")
+            raise ValueError("Product priced below cost")
 
         products.append(
             Product(
