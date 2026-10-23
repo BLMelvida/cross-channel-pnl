@@ -1,32 +1,31 @@
 from datetime import date
 from pathlib import Path
+
 from pydantic import BaseModel, Field
 
 
 class Config(BaseModel):
     """
-    Single source of truth for every parameters the synthetic-data generators need.
+    Define the configuration contract for every synthetic-data generator.
 
-    Injected into each generator (e.g. `generate_catalog(cfg, rng)`) so that
-    changing one value here re-drives the whole simulation. Generators also
-    receive an ``rng`` seeded from ``seed``, which keeps runs reproducible.
+    Contract:
+    - Schema: Every field carries a default, so Config() validates with no arguments.
+    - Domain Bounds: Drift rates belong in [0, 1] and per_day_orders_range requires low <= high; the model enforces neither bound.
+    - Type Integrity: Pydantic enforces the declared type of every field at construction.
+    - Nullability: No field accepts None.
+    - Referential Integrity: Every channel in store_channels is assumed present in channel_currency and channel_price_multiplier, and every currency in channel_currency is assumed present in fx_rates; construction validates none of these references.
+    - Temporal Alignment: start_date and end_date are inclusive dates; days returns the inclusive day count.
+    - Transformation: fx_rates holds the USD value of one unit of each currency, so a USD base price divides by the rate to yield the local amount; channel_price_multiplier applies after that division; default_currency is not consulted by the price path.
+    - Lineage: Category vocabulary originates in reference.CATEGORIES_LIST; channel SKU templates, length limits, and title styles originate in reference.CHANNEL_PROFILES.
 
-    Field groups:
-        - Determinism : `seed` - master seed for reproducible output.
-        - Time window : `start_date` / `end_date` (both ends inclusive;
-          use the `days` property for the inclusive day count).
-        - Catalog size: `n_products`, `n_brands`.
-        - Demand      : `per_day_orders_range` - (low, high) orders per day.
-        - Channels    : `store_channels` - marketplaces being simulated.
-        - Money       : `default_currency` (base currency for prices) and
-          `fx_rates` (value of 1 unit of each currency in USD; USD = 1.0).
-        - Output      : `output_dir` - where generated artifacts are written.
+    Expectations:
+    - Determinism: seed fixes the stage and per-entity RNGs; identical field values reproduce identical generator output.
+    - Non-Mutation: Generators read Config and never modify it; the Pydantic model itself remains mutable.
 
-    Note: Category list is placed in `reference.CATEGORIES_LIST`.
-
-    Read-only helpers:
-        - `days`   - inclusive number of days in the time window.
-        - `n_days` - alias for `days`.
+    Failures:
+    - Crash: Pydantic raises ValidationError when a field violates its declared type.
+    - Crash: Listing generation raises KeyError when store_channels or channel_currency references a missing channel or currency key.
+    - Finding: Drift rates outside [0, 1] pass construction and saturate the corresponding drift.
     """
 
     seed: int = 42
@@ -43,10 +42,29 @@ class Config(BaseModel):
     n_brands: int = 23
     per_day_orders_range: tuple[int, int] = (50, 250)
 
+    # USD per 1 unit of foreign currency
     default_currency: str = "USD"
     fx_rates: dict[str, float] = Field(
-        default_factory=lambda: {"USD": 1.0, "EUR": 0.92, "GBP": 0.79}
+        default_factory=lambda: {"USD": 1.0, "EUR": 1.12, "GBP": 1.32}
     )
+
+    channel_currency: dict[str, str] = {
+        "amazon": "USD",
+        "ebay": "EUR",
+        "woocommerce": "GBP",
+    }
+
+    # Multiplier on top of FX-converted price
+    channel_price_multiplier: dict[str, float] = Field(
+        default_factory=lambda: {"amazon": 1.00, "ebay": 0.97, "woocommerce": 0.95}
+    )
+
+    sku_null_rate: float = 0.05
+    separator_swap_rate: float = 0.15
+    drift_channel_prefix_rate: float = 0.10
+    drift_lowercase_rate: float = 0.20
+    drift_titlecase_rate: float = 0.30
+    drift_typo_rate: float = 0.05
 
     output_dir: Path = Path("data")
 
